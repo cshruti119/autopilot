@@ -49,6 +49,11 @@ Install development dependencies:
 uv sync --dev
 ```
 
+Run Checkpoint UI:
+```bash
+uvicorn checkpoints.ui.server:app --port 8080 --reload
+```
+
 Run tests:
 ```bash
 uv run pytest
@@ -79,3 +84,25 @@ uv run flake8
 ## License
 
 MIT License
+----------
+
+# 1. Start infra
+cd infra && docker-compose up -d
+
+# 2. Activate env
+source .venv/bin/activate
+
+# 3. Create your tic-tac-toe repo on GitHub, clone it locally
+git clone https://github.com/your-username/tic-tac-toe
+# Set TARGET_REPO_PATH in .env to this path
+
+# 4. Create a Jira story titled "Build Tic-Tac-Toe game"
+# Note the story ID e.g. TIC-1
+
+# 5. In one terminal — run checkpoint UI
+uvicorn checkpoints.ui.server:app --port 8080
+
+# 6. In another terminal — run the pipeline
+python main.py
+# Pipeline pauses at spec → open localhost:8080/checkpoint/TIC-1
+# Approve spec → pipeline resumes automatically
