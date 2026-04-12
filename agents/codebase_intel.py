@@ -1,4 +1,3 @@
-# agents/codebase_intel/agent.py
 import chromadb
 from pathlib import Path
 

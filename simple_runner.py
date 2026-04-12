@@ -4,8 +4,8 @@ Simple pipeline runner to test agents in sequence.
 """
 
 from core.state.manifest import TaskManifest, PipelineStatus
-import agents.orchestrator.agent as orchestrator
-import agents.prep.agent as prep
+import agents.orchestrator as orchestrator
+import agents.prep as prep
 
 def run_pipeline(jira_id: str = "TT-1"):
     """Run the agent pipeline and show outputs."""

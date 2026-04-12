@@ -9,8 +9,8 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.syntax import Syntax
 from rich.table import Table
-import agents.orchestrator.agent as orchestrator
-import agents.prep.agent as prep
+import agents.orchestrator as orchestrator
+import agents.prep as prep
 
 console = Console()
 

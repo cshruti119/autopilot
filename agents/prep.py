@@ -1,4 +1,4 @@
-from agents.codebase_intel.agent import query_context
+from agents.codebase_intel import query_context
 from core.state.manifest import TaskManifest, PipelineStatus
 from langchain_google_genai import ChatGoogleGenerativeAI
 from util import getGeminiApiKey

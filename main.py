@@ -1,8 +1,8 @@
 # main.py
 import asyncio, redis, json, os
 from core.pipeline import build_graph
-from agents.orchestrator.agent import run as orchestrate
-from agents.codebase_intel.agent import index_repo
+from agents.orchestrator import run as orchestrate
+from agents.codebase_intel import index_repo
 from dotenv import load_dotenv
 
 load_dotenv()

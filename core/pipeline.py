@@ -1,8 +1,8 @@
 # core/pipeline.py
 from langgraph.graph import StateGraph, END
 from core.state.manifest import TaskManifest, PipelineStatus
-import agents.orchestrator.agent as orchestrator
-import agents.prep.agent as prep
+import agents.orchestrator as orchestrator
+import agents.prep as prep
 import agents.dev.agent as dev
 import agents.test_agent.agent as test_agent
 import agents.review.agent as review

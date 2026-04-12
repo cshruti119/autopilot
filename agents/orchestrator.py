@@ -6,7 +6,7 @@ import os,re
 client = getClient()
 
 def run(jira_id: str) -> TaskManifest:
-    root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
+    root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../"))
     print(f"Root dir: {root_dir}")
     md_path = os.path.join(root_dir, f"inputs/{jira_id}.md")
     with open(md_path, "r") as f:
