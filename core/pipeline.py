@@ -30,21 +30,42 @@ def route_after_prep(manifest: TaskManifest) -> str:
 def build_graph():
     graph = StateGraph(TaskManifest)
 
+    graph.add_node("orchestrate", orchestrator.run)
     graph.add_node("prep", prep.run)
-    graph.add_node("dev", dev.run)
-    graph.add_node("test", test_agent.run)
-    graph.add_node("review", review.run)
-    graph.add_node("remediation", remediation.run)
-    graph.add_node("commit", commit.run)
 
-    graph.set_entry_point("prep")
-    graph.add_conditional_edges("prep", route_after_prep,
-                                {"dev": "dev", "await_spec_approval": END})
-    graph.add_edge("dev", "review")    # test runs in parallel via FastAPI
-    graph.add_conditional_edges("review", route_after_review,
-                                {"commit": "commit", "remediation": "remediation"})
-    graph.add_conditional_edges("remediation", route_after_remediation,
-                                {"prep": "prep", "dev": "dev", END: END})
-    graph.add_edge("commit", END)
+    # Set the entry point and create a simple flow
+    graph.set_entry_point("orchestrate")
+    graph.add_edge("orchestrate", "prep")
+    graph.add_edge("prep", END)
+
+    return graph.compile()
+
+def run_pipeline_graph(jira_id: str = "TT-1"):
+    """Run the pipeline using the graph structure."""
+    print(f"🚀 Starting pipeline for {jira_id}")
+    
+    # Create initial manifest
+    initial_manifest = TaskManifest(
+        jira_id=jira_id,
+        status=PipelineStatus.INITIATED
+    )
+    
+    # Build and run graph
+    graph = build_graph()
+    final_manifest = graph.invoke(initial_manifest)
+    
+    print(f"✅ Pipeline completed. Final status: {final_manifest.status}")
+    return final_manifest
+
+if __name__ == "__main__":
+    # Run the pipeline when script is executed directly
+    manifest = run_pipeline_graph("TT-1")
+    print("\nFinal Manifest Summary:")
+    print(f"- Jira ID: {manifest.jira_id}")
+    print(f"- Status: {manifest.status}")
+    print(f"- Acceptance Criteria: {len(manifest.acceptance_criteria)} items")
+    print(f"- Has Spec: {'Yes' if manifest.spec_doc else 'No'}")
+    #                             {"prep": "prep", "dev": "dev", END: END})
+    # graph.add_edge("commit", END)
 
     return graph.compile()

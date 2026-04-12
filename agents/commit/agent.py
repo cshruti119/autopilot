@@ -1,5 +1,5 @@
 # agents/commit/agent.py
-import os, shutil
+import os
 from github import Github
 from core.state.manifest import TaskManifest, PipelineStatus
 

@@ -24,9 +24,10 @@ class ReviewResult(BaseModel):
 
 class TaskManifest(BaseModel):
     jira_id: str
-    story_text: str
-    acceptance_criteria: List[str]
-    affected_codebases: List[str]
+    story_text: Optional[str] = ""
+    acceptance_criteria: List[str] = []
+    affected_codebases: List[dict] = []
+    tech_details: Optional[str] = ""
     spec_doc: Optional[str] = None
     generated_code: Optional[dict] = None   # filename -> content
     generated_tests: Optional[dict] = None

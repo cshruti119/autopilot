@@ -1,12 +1,12 @@
 # agents/codebase_intel/agent.py
 import chromadb
-import anthropic
-import os
 from pathlib import Path
 
-chroma = chromadb.HttpClient(host="localhost", port=8001)
-client = anthropic.Anthropic()
+from util import getClient, getChromaClient
 
+client = getClient()  
+chroma = getChromaClient() 
+    
 def index_repo(repo_path: str):
     """Run once, or on file change events."""
     collection = chroma.get_or_create_collection("codebase")

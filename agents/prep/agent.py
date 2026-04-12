@@ -1,22 +1,15 @@
-# agents/prep/agent.py
-import anthropic
 from agents.codebase_intel.agent import query_context
 from core.state.manifest import TaskManifest, PipelineStatus
-
-client = anthropic.Anthropic()
+from langchain_google_genai import ChatGoogleGenerativeAI
+from util import getGeminiApiKey
 
 def run(manifest: TaskManifest) -> TaskManifest:
     context = query_context(manifest.story_text)
-
-    response = client.messages.create(
-        model="claude-sonnet-4-20250514",
-        max_tokens=4000,
-        messages=[{
-            "role": "user",
-            "content": f"""You are a Tech Lead. Write an implementation spec.
-            
+    client = ChatGoogleGenerativeAI(model="gemini-3-flash-preview", api_key=getGeminiApiKey())
+    messages = [
+        ("system", "You are a Tech Lead who knows about the project's codebase and architecture."),
+        ("user", f"""         
 Story: {manifest.story_text}
-
 Acceptance Criteria:
 {chr(10).join(manifest.acceptance_criteria)}
 
@@ -29,10 +22,22 @@ Produce a spec with:
 3. Data structures
 4. How each acceptance criterion is satisfied
 
-Be precise. No code yet, just the spec."""
-        }]
-    )
+Be precise. No code yet, just the spec.
+""")
+    ]
 
-    manifest.spec_doc = response.content[0].text
+    response = client.invoke(messages)
+
+    manifest.spec_doc = response.text
     manifest.status = PipelineStatus.AWAITING_SPEC_APPROVAL
     return manifest
+
+if __name__ == "__main__":
+    # For testing the agent independently
+    print("Testing prep agent...")
+    manifest = TaskManifest(
+        jira_id="TT-1",
+        status=PipelineStatus.INITIATED,
+    )
+    updated_manifest = run(manifest)
+    print(updated_manifest.spec_doc)
