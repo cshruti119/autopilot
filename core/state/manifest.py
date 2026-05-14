@@ -27,7 +27,8 @@ class TaskManifest(BaseModel):
     story_text: Optional[str] = ""
     acceptance_criteria: List[str] = []
     affected_codebases: List[dict] = []
-    tech_details: Optional[str] = ""
+    tech_details: List[str] = []
+    out_of_scope: List[str] = []
     spec_doc: Optional[str] = None
     generated_code: Optional[dict] = None   # filename -> content
     generated_tests: Optional[dict] = None

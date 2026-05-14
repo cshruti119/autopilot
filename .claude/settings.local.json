@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -E \"^-.*\\\\.\\(md|yml|toml|txt|makefile|Makefile\\)$\")",
+      "Bash(uv run *)"
+    ]
+  }
+}

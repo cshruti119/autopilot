@@ -1,13 +1,11 @@
 import chromadb
 from pathlib import Path
 
-from util import getClient, getChromaClient
+from util import getChromaClient
 
-client = getClient()  
-chroma = getChromaClient() 
-    
 def index_repo(repo_path: str):
     """Run once, or on file change events."""
+    chroma = getChromaClient()
     collection = chroma.get_or_create_collection("codebase")
     repo = Path(repo_path)
 
@@ -23,6 +21,7 @@ def index_repo(repo_path: str):
 
 def query_context(question: str) -> str:
     """Called by Prep Agent to get relevant codebase context."""
+    chroma = getChromaClient()
     collection = chroma.get_or_create_collection("codebase")
     results = collection.query(query_texts=[question], n_results=5)
     return "\n\n".join(results["documents"][0])
