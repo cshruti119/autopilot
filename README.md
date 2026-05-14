@@ -7,7 +7,7 @@ An AI-driven pipeline that reads Jira stories and generates code, tests, and Git
 - Python 3.9+
 - [uv](https://github.com/astral-sh/uv) package manager
 - [Colima](https://github.com/abiosoft/colima) + Docker
-- Node.js 18+
+- Node.js 20+
 
 ## Setup
 
