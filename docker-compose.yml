@@ -16,13 +16,5 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
 
-  chromadb:
-    image: chromadb/chroma:latest
-    ports:
-      - "8001:8000"
-    volumes:
-      - chromadata:/chroma/chroma
-
 volumes:
   pgdata:
-  chromadata:

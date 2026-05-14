@@ -11,9 +11,6 @@ def getClient():
     from langchain_google_genai import ChatGoogleGenerativeAI
     return ChatGoogleGenerativeAI(model="gemini-3-flash-preview", api_key=getGeminiApiKey())
 
-def getChromaClient():
-    import chromadb
-    return chromadb.HttpClient(host="localhost", port=8001)
 
 class MockRedisClient:
     """Mock Redis client that doesn't fail when Redis is unavailable."""

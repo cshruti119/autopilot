@@ -2,7 +2,13 @@
   "permissions": {
     "allow": [
       "Bash(grep -E \"^-.*\\\\.\\(md|yml|toml|txt|makefile|Makefile\\)$\")",
-      "Bash(uv run *)"
+      "Bash(uv run *)",
+      "Bash(npm install *)",
+      "Bash(uv sync *)",
+      "Bash(curl -s http://localhost:8080/api/checkpoint/TT-1)",
+      "Bash(kill %1)",
+      "Bash(docker-compose ps *)",
+      "Bash(curl *)"
     ]
   }
 }

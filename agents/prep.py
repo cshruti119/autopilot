@@ -1,21 +1,29 @@
-from agents.codebase_intel import query_context
-from core.state.manifest import TaskManifest, PipelineStatus
-from langchain_google_genai import ChatGoogleGenerativeAI
-from util import getGeminiApiKey
+from typing import Optional
 
-def run(manifest: TaskManifest) -> TaskManifest:
+from agents.codebase_intel import query_context
+from checkpoints.db import create_table, save_checkpoint
+from core.state.manifest import TaskManifest, PipelineStatus
+from util import getClient
+
+
+def run(manifest: TaskManifest, feedback: Optional[str] = None) -> TaskManifest:
     context = query_context(manifest.story_text)
-    client = ChatGoogleGenerativeAI(model="gemini-3-flash-preview", api_key=getGeminiApiKey())
+    client = getClient()
+
+    feedback_section = ""
+    if feedback:
+        feedback_section = f"\nThe previous spec was rejected with the following feedback:\n{feedback}\nPlease revise the spec accordingly.\n"
+
     messages = [
         ("system", "You are a Tech Lead who knows about the project's codebase and architecture."),
-        ("user", f"""         
+        ("user", f"""
 Story: {manifest.story_text}
 Acceptance Criteria:
 {chr(10).join(manifest.acceptance_criteria)}
 
 Existing codebase context:
 {context}
-
+{feedback_section}
 Produce a spec with:
 1. Files to create or modify (with paths)
 2. Function signatures needed
@@ -30,10 +38,14 @@ Be precise. No code yet, just the spec.
 
     manifest.spec_doc = response.text
     manifest.status = PipelineStatus.AWAITING_SPEC_APPROVAL
+
+    create_table()
+    save_checkpoint(manifest)
+
     return manifest
 
+
 if __name__ == "__main__":
-    # For testing the agent independently
     print("Testing prep agent...")
     manifest = TaskManifest(
         jira_id="TT-1",
