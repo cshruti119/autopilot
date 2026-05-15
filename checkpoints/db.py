@@ -24,11 +24,17 @@ def create_table():
                     acceptance_criteria JSONB,
                     tech_details JSONB,
                     affected_codebases JSONB,
-                    status VARCHAR(20) DEFAULT 'pending',
+                    selected_agents JSONB DEFAULT '["test","dev","review"]',
+                    status VARCHAR(30) DEFAULT 'pending',
                     feedback TEXT,
                     created_at TIMESTAMP DEFAULT NOW(),
                     updated_at TIMESTAMP DEFAULT NOW()
                 )
+            """)
+            # Add selected_agents column if table already exists without it
+            cur.execute("""
+                ALTER TABLE checkpoint
+                ADD COLUMN IF NOT EXISTS selected_agents JSONB DEFAULT '["test","dev","review"]'
             """)
 
 
@@ -37,14 +43,16 @@ def save_checkpoint(manifest):
         with conn.cursor() as cur:
             cur.execute("""
                 INSERT INTO checkpoint
-                    (jira_id, spec_doc, story_text, acceptance_criteria, tech_details, affected_codebases, status)
-                VALUES (%s, %s, %s, %s, %s, %s, 'pending')
+                    (jira_id, spec_doc, story_text, acceptance_criteria, tech_details,
+                     affected_codebases, selected_agents, status)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, 'pending')
                 ON CONFLICT (jira_id) DO UPDATE SET
                     spec_doc = EXCLUDED.spec_doc,
                     story_text = EXCLUDED.story_text,
                     acceptance_criteria = EXCLUDED.acceptance_criteria,
                     tech_details = EXCLUDED.tech_details,
                     affected_codebases = EXCLUDED.affected_codebases,
+                    selected_agents = EXCLUDED.selected_agents,
                     status = 'pending',
                     feedback = NULL,
                     updated_at = NOW()
@@ -55,6 +63,7 @@ def save_checkpoint(manifest):
                 json.dumps(manifest.acceptance_criteria),
                 json.dumps(manifest.tech_details),
                 json.dumps(manifest.affected_codebases),
+                json.dumps(manifest.selected_agents),
             ))
 
 

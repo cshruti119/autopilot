@@ -1,28 +1,52 @@
-# agents/test_agent/agent.py
-import anthropic, os, json
-from core.state.manifest import TaskManifest
+import json
+import os
+from typing import Optional
 
-client = anthropic.Anthropic()
+from core.state.manifest import TaskManifest, PipelineStatus
+from util import getClient
 
-def run(manifest: TaskManifest) -> TaskManifest:
-    response = client.messages.create(
-        model="claude-sonnet-4-20250514",
-        max_tokens=6000,
-        messages=[{
-            "role": "user",
-            "content": f"""You are a QA Engineer writing tests BEFORE seeing the implementation.
 
-Spec:
-{manifest.spec_doc}
+def run(manifest: TaskManifest, review_feedback: Optional[str] = None) -> TaskManifest:
+    local_path = manifest.repo_local_path
+    client = getClient()
 
-Acceptance Criteria:
-{chr(10).join(manifest.acceptance_criteria)}
+    spec_content = _read_file(local_path, "SPEC.md")
+    agent_instructions = _read_file(local_path, "TEST_AGENT.md")
 
-Write unit tests and integration tests. Return JSON where keys are 
-test file paths and values are complete test file contents.
-Return ONLY valid JSON."""
-        }]
+    feedback_section = (
+        f"\nReview feedback to address:\n{review_feedback}\n"
+        if review_feedback else ""
     )
 
-    manifest.generated_tests = json.loads(response.content[0].text)
+    messages = [
+        ("system", agent_instructions),
+        ("user", f"""Write tests for every task defined in the spec below.
+{feedback_section}
+Spec:
+{spec_content}
+
+Return a JSON object where keys are file paths relative to the repo root and values are complete file contents.
+Return ONLY valid JSON, no markdown fences."""),
+    ]
+
+    response = client.invoke(messages)
+    tests = json.loads(response.text)
+    manifest.generated_tests = tests
+
+    for filepath, content in tests.items():
+        full = os.path.join(local_path, filepath)
+        os.makedirs(os.path.dirname(full), exist_ok=True)
+        with open(full, "w") as f:
+            f.write(content)
+
+    print(f"✅ Test agent wrote {len(tests)} file(s)")
+    manifest.status = PipelineStatus.DEVELOPING
     return manifest
+
+
+def _read_file(base: str, filename: str) -> str:
+    path = os.path.join(base, filename)
+    if not os.path.exists(path):
+        return f"(No {filename} found)"
+    with open(path) as f:
+        return f.read()

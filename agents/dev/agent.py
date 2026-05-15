@@ -1,39 +1,52 @@
-# agents/dev/agent.py
-import anthropic, subprocess, os
+import json
+import os
+from typing import Optional
+
 from core.state.manifest import TaskManifest, PipelineStatus
+from util import getClient
 
-client = anthropic.Anthropic()
 
-def run(manifest: TaskManifest) -> TaskManifest:
-    repo_path = os.getenv("TARGET_REPO_PATH")
+def run(manifest: TaskManifest, review_feedback: Optional[str] = None) -> TaskManifest:
+    local_path = manifest.repo_local_path
+    client = getClient()
 
-    response = client.messages.create(
-        model="claude-sonnet-4-20250514",
-        max_tokens=8000,
-        messages=[{
-            "role": "user",
-            "content": f"""You are a Developer. Implement code based on this spec.
+    spec_content = _read_file(local_path, "SPEC.md")
+    agent_instructions = _read_file(local_path, "DEV_AGENT.md")
 
-Spec:
-{manifest.spec_doc}
-
-Return a JSON object where keys are relative file paths and values are 
-complete file contents. Return ONLY valid JSON, no markdown."""
-        }]
+    feedback_section = (
+        f"\nReview feedback to address:\n{review_feedback}\n"
+        if review_feedback else ""
     )
 
-    import json
-    files = json.loads(response.content[0].text)
+    messages = [
+        ("system", agent_instructions),
+        ("user", f"""Implement every task defined in the spec below. Do NOT include test files.
+{feedback_section}
+Spec:
+{spec_content}
+
+Return a JSON object where keys are file paths relative to the repo root and values are complete file contents.
+Return ONLY valid JSON, no markdown fences."""),
+    ]
+
+    response = client.invoke(messages)
+    files = json.loads(response.text)
     manifest.generated_code = files
 
-    # Write files to sandbox (NOT directly to repo)
-    sandbox = f"/tmp/aifsd_sandbox_{manifest.jira_id}"
-    os.makedirs(sandbox, exist_ok=True)
     for filepath, content in files.items():
-        full = os.path.join(sandbox, filepath)
+        full = os.path.join(local_path, filepath)
         os.makedirs(os.path.dirname(full), exist_ok=True)
         with open(full, "w") as f:
             f.write(content)
 
-    manifest.status = PipelineStatus.RECONCILING
+    print(f"✅ Dev agent wrote {len(files)} file(s)")
+    manifest.status = PipelineStatus.REVIEWING
     return manifest
+
+
+def _read_file(base: str, filename: str) -> str:
+    path = os.path.join(base, filename)
+    if not os.path.exists(path):
+        return f"(No {filename} found)"
+    with open(path) as f:
+        return f.read()
